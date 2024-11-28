@@ -408,4 +408,9 @@ def AffineExpandIndexOps : Pass<"affine-expand-index-ops"> {
   let constructor = "mlir::affine::createAffineExpandIndexOpsPass()";
 }
 
+def FPLStudy : Pass<"fpl-study", "func::FuncOp"> {
+  let summary = "Study how to use fpl on affine dialect.";
+  let constructor = "mlir::affine::createFPLStudyPass()";
+}
+
 #endif // MLIR_DIALECT_AFFINE_PASSES
