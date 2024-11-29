@@ -1,15 +1,3 @@
-//===- LoopTiling.cpp --- Loop tiling pass ------------------------------*-===//
-//
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
-//
-// This file implements a pass to tile loop nests.
-//
-//===----------------------------------------------------------------------===//
-
 #include "mlir/Dialect/Affine/Passes.h"
 
 #include "mlir/Dialect/Affine/Analysis/AffineAnalysis.h"
@@ -25,7 +13,6 @@
 #include "mlir/IR/IRMapping.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
-#include <optional>
 
 namespace mlir {
 namespace affine {
