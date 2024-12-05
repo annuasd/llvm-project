@@ -11,6 +11,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/IRMapping.h"
+#include "mlir/IR/Visitors.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 
@@ -21,22 +22,53 @@ namespace affine {
 } // namespace affine
 } // namespace mlir
 
+// build=/Users/niuyibo/workspace/llvm-project/build
+// ${build}/bin/mlir-opt /Users/niuyibo/workspace/llvm-project/mlir-example/FPL/for.mlir \
+//  --pass-pipeline='builtin.module(func.func(fpl-study))'
+
 using namespace mlir;
 using namespace mlir::affine;
+using namespace mlir::presburger;
 
 #define DEBUG_TYPE "affine-loop-tile"
 
 namespace {
-
 /// A pass to perform loop tiling on all suitable loop nests of a Function.
 struct FPLStudy : public affine::impl::FPLStudyBase<FPLStudy> {
   void runOnOperation() override {
-    llvm::errs() << "hello world!" << "\n";
+    auto f = getOperation();
+    AffineForOp top;
+    f->walk([&](AffineForOp forOp) {
+      top = forOp;
+      return WalkResult::interrupt();
+    });
+    std::vector<SmallVector<DependenceComponent, 2>> depCompsVec;
+    auto op1 = *top.getBody()->op_begin<affine::AffineStoreOp>();
+    auto op2 = *++top.getBody()->op_begin<affine::AffineStoreOp>();
+    MemRefAccess access1(op1);
+    MemRefAccess access2(op2);
+    SmallVector<DependenceComponent, 2> depComps;
+    PresburgerSpace space = PresburgerSpace::getRelationSpace();
+    IntegerRelation rel1(space), rel2(space);
+    if(failed(access1.getAccessRelation(rel1))) {
+      llvm::errs() << "啥情况1" << "\n";
+    }
+    if(failed(access2.getAccessRelation(rel2))) {
+      llvm::errs() << "啥情况2" << "\n";
+    }
+    llvm::errs() << *op1 << "\n";
+    rel1.dump();
+    
+    llvm::errs() << *op2 << "\n";
+    rel2.dump();
+    
+    
+    exit(0);
   }
 };
 
 } // namespace
-
+// transpose-ln-add-transpose
 namespace mlir {
 std::unique_ptr<Pass> mlir::affine::createFPLStudyPass() {
   return std::make_unique<FPLStudy>();
