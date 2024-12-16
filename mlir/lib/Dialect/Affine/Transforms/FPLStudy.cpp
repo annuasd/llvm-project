@@ -22,10 +22,7 @@ namespace affine {
 } // namespace affine
 } // namespace mlir
 
-// build=/Users/niuyibo/workspace/llvm-project/build
-// ${build}/bin/mlir-opt /Users/niuyibo/workspace/llvm-project/mlir-example/FPL/for.mlir \
-//  --pass-pipeline='builtin.module(func.func(fpl-study))'
-
+// build=
 using namespace mlir;
 using namespace mlir::affine;
 using namespace mlir::presburger;
@@ -56,13 +53,16 @@ struct FPLStudy : public affine::impl::FPLStudyBase<FPLStudy> {
     if(failed(access2.getAccessRelation(rel2))) {
       llvm::errs() << "啥情况2" << "\n";
     }
+    
+    FlatAffineValueConstraints domain1(rel1.getDomainSet());
+    FlatAffineValueConstraints domain2(rel2.getDomainSet());
+
     llvm::errs() << *op1 << "\n";
     rel1.dump();
-    
+    domain1.dump();
     llvm::errs() << *op2 << "\n";
-    rel2.dump();
-    
-    
+    rel2.dump();    
+    domain2.dump();
     exit(0);
   }
 };
