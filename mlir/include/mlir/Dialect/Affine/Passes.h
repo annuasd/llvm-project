@@ -117,6 +117,8 @@ std::unique_ptr<OperationPass<func::FuncOp>> createPipelineDataTransferPass();
 std::unique_ptr<Pass> createAffineExpandIndexOpsPass();
 
 std::unique_ptr<Pass> createFPLStudyPass();
+std::unique_ptr<Pass> createFPLStudy2Pass();
+
 //===----------------------------------------------------------------------===//
 // Registration
 //===----------------------------------------------------------------------===//

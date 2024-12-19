@@ -413,4 +413,9 @@ def FPLStudy : Pass<"fpl-study", "func::FuncOp"> {
   let constructor = "mlir::affine::createFPLStudyPass()";
 }
 
+def FPLStudy2 : Pass<"fpl-study2", "func::FuncOp"> {
+  let summary = "Study how to use fpl on affine dialect.";
+  let constructor = "mlir::affine::createFPLStudy2Pass()";
+}
+
 #endif // MLIR_DIALECT_AFFINE_PASSES

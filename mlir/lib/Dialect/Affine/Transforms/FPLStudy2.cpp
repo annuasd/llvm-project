@@ -7,80 +7,67 @@
 #include "mlir/Dialect/Affine/Analysis/LoopAnalysis.h"
 #include "mlir/Dialect/Affine/Analysis/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Affine/IR/AffineValueMap.h"
 #include "mlir/Dialect/Affine/LoopUtils.h"
 #include "mlir/Dialect/Affine/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
-#include "mlir/IR/IRMapping.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/Visitors.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 
 namespace mlir {
 namespace affine {
-#define GEN_PASS_DEF_FPLSTUDY
+#define GEN_PASS_DEF_FPLSTUDY2
 #include "mlir/Dialect/Affine/Passes.h.inc"
 } // namespace affine
 } // namespace mlir
 
-// build=
 using namespace mlir;
 using namespace mlir::affine;
 using namespace mlir::presburger;
 
-#define DEBUG_TYPE "affine-loop-tile"
-
 namespace {
 /// A pass to perform loop tiling on all suitable loop nests of a Function.
-struct FPLStudy : public affine::impl::FPLStudyBase<FPLStudy> {
+struct FPLStudy2 : public affine::impl::FPLStudy2Base<FPLStudy2> {
   void runOnOperation() override {
     auto f = getOperation();
+    
     AffineForOp top;
     f->walk([&](AffineForOp forOp) {
       top = forOp;
       return WalkResult::interrupt();
     });
-    std::vector<SmallVector<DependenceComponent, 2>> depCompsVec;
-    auto op1 = *top.getBody()->op_begin<affine::AffineStoreOp>();
-    auto op2 = *++top.getBody()->op_begin<affine::AffineStoreOp>();
-    MemRefAccess access1(op1);
-    MemRefAccess access2(op2);
-    SmallVector<DependenceComponent, 2> depComps;
+    // auto apply = *top.getBody()->op_begin<affine::AffineLoadOp>();
+    auto op = *top.getBody()->op_begin<AffineLoadOp>();
+    MemRefAccess access(op);
     PresburgerSpace space = PresburgerSpace::getRelationSpace();
-    IntegerRelation rel1(space), rel2(space);
-    if (failed(access1.getAccessRelation(rel1))) {
-      llvm::errs() << "啥情况1" << "\n";
-    }
-    if (failed(access2.getAccessRelation(rel2))) {
+    IntegerRelation rel(space);
+    if (failed(access.getAccessRelation(rel))) {
       llvm::errs() << "啥情况2" << "\n";
     }
+    FlatAffineValueConstraints domain(rel.getDomainSet());
 
-    FlatAffineValueConstraints domain1(rel1.getDomainSet());
-    FlatAffineValueConstraints domain2(rel2.getDomainSet());
+    llvm::errs() << *op << "\n";
+    rel.dump();
+    domain.dump();
 
-    llvm::errs() << *op1 << "\n";
-    rel1.dump();
-    domain1.dump();
-    llvm::errs() << *op2 << "\n";
-    rel2.dump();
-    domain2.dump();
-    auto loopNums = domain1.getNumDimVars();
+    auto loopNums = domain.getNumDimVars();
     llvm::errs() << "domain:" << "\n";
     for (unsigned i = 0; i < loopNums; ++i) {
-      auto dimVar = domain1.getValue(i);
+      auto dimVar = domain.getValue(i);
       llvm::errs()
           << *llvm::cast<BlockArgument>(dimVar).getOwner()->getParentOp()
           << "\n";
     }
-    domain1.getNumLocalVars();
-    auto local = domain1.getVarKindOffset(VarKind::Local);
-    auto idxNums = domain1.getNumLocalVars();
+    domain.getNumLocalVars();
+    auto local = domain.getVarKindOffset(VarKind::Local);
+    auto idxNums = domain.getNumLocalVars();
     for (unsigned i = 0; i < idxNums; ++i) {
       llvm::errs() << "local:" << i << "\n";
-      auto ub = domain1.getConstantBound(BoundType::UB, local + i);
-      auto lb = domain1.getConstantBound(BoundType::LB, local + i);
+      auto ub = domain.getConstantBound(BoundType::UB, local + i);
+      auto lb = domain.getConstantBound(BoundType::LB, local + i);
       if (ub.has_value())
         llvm::errs() << "ub" << *ub << "\n";
       if (lb.has_value())
@@ -92,7 +79,7 @@ struct FPLStudy : public affine::impl::FPLStudyBase<FPLStudy> {
 } // namespace
 // transpose-ln-add-transpose
 namespace mlir {
-std::unique_ptr<Pass> mlir::affine::createFPLStudyPass() {
-  return std::make_unique<FPLStudy>();
+std::unique_ptr<Pass> mlir::affine::createFPLStudy2Pass() {
+  return std::make_unique<FPLStudy2>();
 }
 } // namespace mlir

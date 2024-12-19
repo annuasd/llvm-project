@@ -12,3 +12,4 @@ func.func @producer_consumer_fusion(%arg0: memref<10x224x3xf32>, %arg1: memref<1
     }
     return
 }
+
